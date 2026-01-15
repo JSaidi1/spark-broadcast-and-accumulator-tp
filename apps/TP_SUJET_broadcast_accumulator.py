@@ -157,8 +157,9 @@ from pyspark.sql import SparkSession
 
 # Initialisation Spark
 spark = SparkSession.builder \
-    .appName("TP_Broadcast_Accumulator") \
+    .appName("tp") \
     .master("spark://spark-master:7077") \
+    .config("spark.ui.showConsoleProgress", "false") \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("ERROR")
@@ -175,10 +176,26 @@ print("\n" + "=" * 70)
 print("EXERCICE 1 : CHARGEMENT DES DONNÉES")
 print("=" * 70)
 
-# TODO: Votre code ici
+df_achats = spark.read \
+    .option("header", "true") \
+    .option("inferSchema", "true") \
+    .csv("/data/achats.csv")
 
+df_clients = spark.read \
+    .option("header", "true") \
+    .option("inferSchema", "true") \
+    .csv("/data/clients.csv")
 
-
+print("Schéma des achats :")
+df_achats.printSchema()
+print("Premières lignes des achats :")
+df_achats.show(5)
+print(f"Nombre de lignes dans achats.csv : {df_achats.count()}")        
+print("\nSchéma des clients :")
+df_clients.printSchema()
+print("Premières lignes des clients :")
+df_clients.show(5)
+print(f"Nombre de lignes dans clients.csv : {df_clients.count()}") 
 
 # -------------------------------------------------------------
 # EXERCICE 2 : BROADCAST - TABLE TVA
