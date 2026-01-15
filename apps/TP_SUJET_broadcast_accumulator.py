@@ -154,6 +154,8 @@ B.4 Comment gérer un accumulator pour des opérations non commutatives ?
 # =============================================================
 
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, udf
+from pyspark.sql.types import DoubleType
 
 # Initialisation Spark
 spark = SparkSession.builder \
@@ -200,13 +202,48 @@ print(f"Nombre de lignes dans clients.csv : {df_clients.count()}")
 # -------------------------------------------------------------
 # EXERCICE 2 : BROADCAST - TABLE TVA
 # -------------------------------------------------------------
+"""
+Table de référence des taux de TVA :
+- France : 20%
+- Belgique : 21%
+- Suisse : 7.7%
+- Luxembourg : 17%
+- Canada : 5%
+- Maroc : 20%
+
+2.1 Créer un dictionnaire Python avec les taux de TVA par pays
+2.2 Broadcaster ce dictionnaire vers tous les workers
+2.3 Créer une UDF qui utilise la broadcast variable pour récupérer le taux
+2.4 Ajouter une colonne "taux_tva" au DataFrame clients
+2.5 Afficher les clients avec leur taux de TVA
+"""
 print("\n" + "=" * 70)
 print("EXERCICE 2 : BROADCAST - TABLE TVA")
 print("=" * 70)
 
-# TODO: Votre code ici
+# 2.1 Créer un dictionnaire Python avec les taux de TVA par pays
+tva_dict = {
+    "France": 0.20,
+    "Belgique": 0.21,
+    "Suisse": 0.077,
+    "Luxembourg": 0.17,
+    "Canada": 0.05,
+    "Maroc": 0.20
+}
 
+# 2.2 Broadcaster ce dictionnaire vers tous les workers
+tva_broadcast = sc.broadcast(tva_dict)
 
+# 2.3 Créer une UDF qui utilise la broadcast variable pour récupérer le taux
+@udf(DoubleType())
+def get_tva(city):
+    return tva_broadcast.value.get(city)
+
+# 2.4 Ajouter une colonne "taux_tva" au DataFrame clients
+df_clients = df_clients.withColumn("taux_tva", get_tva(col("city")))
+
+# 2.5 Afficher les clients avec leur taux de TVA
+df_clients.show()
 
 
 # -------------------------------------------------------------
